@@ -118,12 +118,16 @@ class Fonts_model extends \Model {
             throw new Exception("Error Processing Request: No property list found", 1);
         }
 
-        // Delete previous set        
-        $this->deleteWhere('serial_number=?', $this->serial_number);
-
         $parser = new CFPropertyList();
         $parser->parse($plist, CFPropertyList::FORMAT_XML);
         $myList = $parser->toArray();
+
+        if (! is_array($myList)) {
+            throw new Exception("Error Processing Request: Invalid property list payload", 1);
+        }
+
+        // Delete previous set only after parsing succeeds
+        $this->deleteWhere('serial_number=?', $this->serial_number);
 
         foreach ($myList as $font) {
             // Check if we have a name

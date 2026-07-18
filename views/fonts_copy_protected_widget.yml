@@ -2,6 +2,7 @@ type: button
 widget_id: fonts_copy_protected-widget
 api_url: /module/fonts/get_button_widget/copy_protected
 i18n_title: fonts.copy_protected_widget
+i18n_tooltip: fonts.tooltips.copy_protected
 listing_link: /show/listing/fonts/fonts
 icon: fa-lock
 buttons:

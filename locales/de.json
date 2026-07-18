@@ -14,6 +14,9 @@
   "designer": "Designer",
   "clienttab": "Fonts",
   "reporttitle": "Fonts-Bericht",
+  "report": {
+    "title": "Fonts-Bericht"
+  },
   "type_enabled_widget": "Schriftart Aktiviert",
   "valid_widget": "Schrift Gültigkeit",
   "duplicate_widget": "Doppelte Schriften", 
@@ -29,5 +32,8 @@
   "family": "Familie",
   "type_name": "Name der Schriftart",
   "type": "Typ",
-  "name": "Name"
+  "name": "Name",
+  "tooltips": {
+    "installed_fonts": "Zeigt Schriftarten auf allen Clients. Jeder Eintrag zeigt den Schriftartnamen und die Anzahl der Installationen."
+  }
 }

@@ -2,6 +2,7 @@ type: scrollbox
 widget_id: fonts-vendor-scrollbox-widget
 api_url: /module/fonts/get_list/vendor
 i18n_title: fonts.vendor_widget
+i18n_tooltip: fonts.tooltips.vendor
 icon: fa-building
 listing_link: /show/listing/fonts/fonts
 search_key: label

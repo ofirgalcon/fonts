@@ -2,6 +2,7 @@ type: button
 widget_id: fonts_type_enabled-widget
 api_url: /module/fonts/get_button_widget/type_enabled
 i18n_title: fonts.type_enabled_widget
+i18n_tooltip: fonts.tooltips.type_enabled
 listing_link: /show/listing/fonts/fonts
 icon: fa-font
 buttons:

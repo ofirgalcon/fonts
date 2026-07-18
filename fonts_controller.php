@@ -8,6 +8,9 @@
  **/
 class Fonts_controller extends Module_controller
 {
+    private $allowed_scrollbox_columns = array('type_name', 'vendor', 'type');
+    private $allowed_button_columns = array('type_enabled', 'valid', 'duplicate', 'copy_protected');
+
     /*** Protect methods with auth! ****/
     function __construct()
     {
@@ -90,8 +93,16 @@ class Fonts_controller extends Module_controller
      **/
     public function get_list($column)
     {
-        // Remove non-column name characters
-        $column = preg_replace("/[^A-Za-z0-9_\-]]/", '', $column);
+        if (! $this->authorized()) {
+            jsonView(array('error' => 'Not authenticated'));
+            return;
+        }
+
+        $column = $this->sanitize_column($column, $this->allowed_scrollbox_columns);
+        if (! $column) {
+            jsonView(array('error' => 'Invalid column'));
+            return;
+        }
 
         $fonts = new Fonts_model();
         $sql = "SELECT COUNT(CASE WHEN `".$column."` <> '' AND `".$column."` IS NOT NULL THEN 1 END) AS count, `".$column."` AS label
@@ -120,8 +131,16 @@ class Fonts_controller extends Module_controller
      **/
     public function get_button_widget($column)
     {
-        // Remove non-column name characters
-        $column = preg_replace("/[^A-Za-z0-9_\-]]/", '', $column);
+        if (! $this->authorized()) {
+            jsonView(array('error' => 'Not authenticated'));
+            return;
+        }
+
+        $column = $this->sanitize_column($column, $this->allowed_button_columns);
+        if (! $column) {
+            jsonView(array('error' => 'Invalid column'));
+            return;
+        }
 
         $sql = "SELECT COUNT(CASE WHEN `".$column."` = '1' THEN 1 END) AS 'yes',
                     COUNT(CASE WHEN `".$column."` = '0' THEN 1 END) AS 'no'
@@ -139,6 +158,16 @@ class Fonts_controller extends Module_controller
         }
 
         jsonView($out);
+    }
+
+    private function sanitize_column($column, $allowed_columns)
+    {
+        $column = preg_replace("/[^A-Za-z0-9_\-]/", '', (string) $column);
+        if (! in_array($column, $allowed_columns, true)) {
+            return '';
+        }
+
+        return $column;
     }
 
     /**

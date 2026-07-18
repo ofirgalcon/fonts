@@ -14,6 +14,9 @@
   "designer": "Ontwerper",
   "clienttab": "Lettertypen",
   "reporttitle": "Lettertypen rapport",
+  "report": {
+    "title": "Lettertypen rapport"
+  },
   "type_enabled_widget": "Lettertype Ingeschakeld",
   "valid_widget": "Lettertype Geldigheid",
   "duplicate_widget": "Dubbele Lettertypes", 
@@ -29,5 +32,8 @@
   "family": "Familie",
   "type_name": "Typeface naam",
   "type": "Type",
-  "name": "Naam"
+  "name": "Naam",
+  "tooltips": {
+    "installed_fonts": "Toont lettertypen op alle clients. Elke vermelding toont de lettertypenaam en het aantal installaties."
+  }
 }

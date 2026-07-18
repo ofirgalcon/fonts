@@ -1,13 +1,14 @@
 Fonts module
 ==============
 
-Lists data on fonts installed on the system. 
+Lists data on fonts installed on the system.
 
-Due to limitations with how the script is ran, it does not list details about user installed fonts (~/Library/Fonts). Only those in /Library/Fonts/ are listed.
-
+The script runs `system_profiler SPFontsDataType` in the logged-in console user's context and excludes `/System/Library/` paths.
+This means the module reports non-system fonts (for example `/Library/Fonts` and user fonts such as `~/Library/Fonts` when available).
 
 Table Schema
 ---
+
 * name - varchar(255) - name of the font file
 * enabled - int - 0/1 is the font file enabled
 * type_name - varchar(255) - typeface name

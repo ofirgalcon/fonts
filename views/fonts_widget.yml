@@ -2,6 +2,7 @@ type: scrollbox
 widget_id: fonts-scrollbox-widget
 api_url: /module/fonts/get_list/type_name
 i18n_title: fonts.widgettitle
+i18n_tooltip: fonts.tooltips.installed_fonts
 icon: fa-font
 listing_link: /show/listing/fonts/fonts
 search_key: label

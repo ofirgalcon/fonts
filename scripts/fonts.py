@@ -9,17 +9,27 @@ import os
 import plistlib
 import sys
 
-from SystemConfiguration import SCDynamicStoreCopyConsoleUser
+# Import ctypes before other framework imports to avoid conflicts
+try:
+    from ctypes import (CDLL,
+                        Structure,
+                        POINTER,
+                        c_int64,
+                        c_int32,
+                        c_int16,
+                        c_char,
+                        c_uint32)
+    from ctypes.util import find_library
+except (AttributeError, ImportError) as e:
+    # Python 3.12 ctypes compatibility issue - ctypes module is broken
+    # This indicates a corrupted or incomplete Python 3.12 installation
+    # The ctypes module itself fails to load, not our code
+    error_msg = str(e) if e else "Unknown error"
+    print(f"Error importing ctypes: {error_msg}", file=sys.stderr)
+    print("This indicates a broken Python 3.12 installation. Please reinstall Python 3.12.", file=sys.stderr)
+    sys.exit(1)
 
-from ctypes import (CDLL,
-                    Structure,
-                    POINTER,
-                    c_int64,
-                    c_int32,
-                    c_int16,
-                    c_char,
-                    c_uint32)
-from ctypes.util import find_library
+from SystemConfiguration import SCDynamicStoreCopyConsoleUser
 
 class timeval(Structure):
     _fields_ = [
@@ -39,28 +49,46 @@ class utmpx(Structure):
                 ("ut_pad",  c_uint32*16),
                ]
 
+def is_yes(value):
+    """Normalize yes/no values returned by system_profiler."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value == 1
+    return str(value).strip().lower() == 'yes'
+
 def get_fonts():
     '''Uses system profiler to get fonts for this machine.'''
 
     username=current_user()
+    
+    # Decode if username is bytes
+    if isinstance(username, bytes):
+        username = username.decode("utf-8", errors="ignore")
+    
+    # If no user is logged in, return None to prevent data loss
+    if not username or username == "":
+        return None
 
-    cmd = ['/bin/launchctl', 'asuser', get_uid(username), '/usr/bin/sudo', '-u', username, '/usr/sbin/system_profiler', 'SPFontsDataType', '-xml']
+    cmd = ['/bin/launchctl', 'asuser', get_uid(username), '/usr/sbin/system_profiler', 'SPFontsDataType', '-xml']
     proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, unused_error) = proc.communicate()
+    output, err = proc.communicate()
+    if proc.returncode != 0 or not output:
+        err_out = err.decode("utf-8", errors="ignore").strip()
+        print(f"fonts.py: failed to collect font data via launchctl asuser (exit={proc.returncode}) {err_out}", file=sys.stderr)
+        return None
 
     try:
-        try:
-            plist = plistlib.readPlistFromString(output)
-        except AttributeError as e:
-            plist = plistlib.loads(output)
+        plist = plistlib.loads(output)
         # system_profiler xml is an array
         sp_dict = plist[0]
         items = sp_dict['_items']
         return items
     except Exception:
-        return {}
+        print("fonts.py: failed to parse system_profiler output", file=sys.stderr)
+        return None
 
 def flatten_get_fonts(array):
     '''Un-nest fonts, return array with objects with relevant keys'''
@@ -68,7 +96,7 @@ def flatten_get_fonts(array):
     for obj in array:
         device = {'name': '', 'enabled': 0, 'type_enabled': 0, 'copy_protected': 0, 'duplicate': 0, 'embeddable': 0, 'outline': 0, 'valid': 0}
 
-        # Only process fonts in /Library/Fonts
+        # Exclude system fonts and keep non-system fonts
         if 'path' in obj and "/System/Library/" in obj['path']:
             continue
 
@@ -81,7 +109,7 @@ def flatten_get_fonts(array):
                 device['path'] = obj[item]
             elif item == 'type':
                 device['type'] = obj[item]
-            elif item == 'enabled' and obj[item] == 'Yes':
+            elif item == 'enabled' and is_yes(obj[item]):
                 device['enabled'] = 1
 
             # Process each typeface within font
@@ -110,20 +138,21 @@ def flatten_get_fonts(array):
                             device['description'] = font[fontitem]
                         elif fontitem == 'designer':
                             device['designer'] = font[fontitem]
-                        elif fontitem == 'copy_protected' and font[fontitem] == 'yes':
+                        elif fontitem == 'copy_protected' and is_yes(font[fontitem]):
                             device['copy_protected'] = 1
-                        elif fontitem == 'duplicate' and font[fontitem] == 'yes':
+                        elif fontitem == 'duplicate' and is_yes(font[fontitem]):
                             device['duplicate'] = 1
-                        elif fontitem == 'embeddable' and font[fontitem] == 'yes':
+                        elif fontitem == 'embeddable' and is_yes(font[fontitem]):
                             device['embeddable'] = 1
-                        elif fontitem == 'enabled' and font[fontitem] == 'yes':
+                        elif fontitem == 'enabled' and is_yes(font[fontitem]):
                             device['type_enabled'] = 1
-                        elif fontitem == 'outline' and font[fontitem] == 'yes':
+                        elif fontitem == 'outline' and is_yes(font[fontitem]):
                             device['outline'] = 1
-                        elif fontitem == 'valid' and font[fontitem] == 'yes':
+                        elif fontitem == 'valid' and is_yes(font[fontitem]):
                             device['valid'] = 1
 
-        out.append(device)
+        if device.get('name') or device.get('type_name') or device.get('path'):
+            out.append(device)
     return out
 
 def current_user():
@@ -170,17 +199,20 @@ def main():
     """Main"""
 
     # Get results
-    result = dict()
-    result = flatten_get_fonts(get_fonts())
+    fonts_data = get_fonts()
+    
+    # If data cannot be collected, exit early to prevent deleting existing data
+    if fonts_data is None:
+        sys.exit(0)
+    
+    result = flatten_get_fonts(fonts_data)
 
     # Write font results to cache
+
     cachedir = '%s/cache' % os.path.dirname(os.path.realpath(__file__))
     output_plist = os.path.join(cachedir, 'fonts.plist')
-    try:
-        plistlib.writePlist(result, output_plist)
-    except:
-        with open(output_plist, 'wb') as fp:
-            plistlib.dump(result, fp, fmt=plistlib.FMT_XML)
+    with open(output_plist, 'wb') as fp:
+        plistlib.dump(result, fp, fmt=plistlib.FMT_XML)
 
 if __name__ == "__main__":
     main()

@@ -14,6 +14,9 @@
     "designer": "Designer",
     "clienttab": "Polices",
     "reporttitle": "Polices",
+    "report": {
+        "title": "Polices"
+    },
     "type_enabled_widget": "Caractère Activé",
     "valid_widget": "Validité des Polices",
     "duplicate_widget": "Polices Dupliquées", 
@@ -29,5 +32,8 @@
     "family": "Famille",
     "type_name": "Nom Caractère",
     "type": "Type",
-    "name": "Nom"
+    "name": "Nom",
+    "tooltips": {
+        "installed_fonts": "Affiche les polices sur tous les clients. Chaque entrée affiche le nom de la police et le nombre d'installations."
+    }
 }

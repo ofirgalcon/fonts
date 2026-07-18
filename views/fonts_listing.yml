@@ -21,7 +21,7 @@ table:
     filter: valid_filter
   - column: fonts.duplicate
     i18n_header: fonts.duplicate
-    formatter: binaryYesNo
+    formatter: risk_yes_no_risk_formatter
     filter: duplicate_filter
   - column: fonts.style
     i18n_header: fonts.style
@@ -32,7 +32,7 @@ table:
     filter: type_filter
   - column: fonts.copy_protected
     i18n_header: fonts.copy_protected
-    formatter: binaryYesNo
+    formatter: risk_yes_no_risk_formatter
     filter: copy_protected_filter
   - column: fonts.path
     i18n_header: fonts.path

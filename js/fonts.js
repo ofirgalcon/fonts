@@ -46,6 +46,24 @@ var duplicate_filter = function(colNumber, d) {
 }
 
 /**
+ * Shared risk formatter (yes = red, no = green)
+ */
+var risk_yes_no_risk_formatter = function(col, row){
+    var cell = $('td:eq('+col+')', row),
+        value = cell.text().trim();
+    value = value === '1' ? mr.label(i18n.t('yes'), 'danger') :
+        (value === '0' ? mr.label(i18n.t('no'), 'success') : '');
+    cell.html(value);
+}
+
+/**
+ * Duplicate formatter (yes = red, no = green)
+ */
+var duplicate_yes_no_risk_formatter = function(col, row){
+    risk_yes_no_risk_formatter(col, row);
+}
+
+/**
  * Copy protected filter
  */
 var copy_protected_filter = function(colNumber, d) {
@@ -58,6 +76,13 @@ var copy_protected_filter = function(colNumber, d) {
         d.columns[colNumber].search.value = '= 0';
         d.search.value = '';
     }
+}
+
+/**
+ * Copy protected formatter (yes = red, no = green)
+ */
+var copy_protected_yes_no_risk_formatter = function(col, row){
+    risk_yes_no_risk_formatter(col, row);
 }
 
 /**
